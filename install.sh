@@ -16,7 +16,7 @@ install_aliases(){
 install_defauls(){
     echo "Installing defaults"
     sudo apt update && sudo apt upgrade && sudo ubuntu-drivers autoinstall
-    sudo apt install tilda curl htop net-tools vlc apt-transport-https gnupg2 unzip -y
+    sudo apt install git tilda curl htop net-tools vlc apt-transport-https gnupg2 unzip -y
 }
 #---------------------------------------------------------
 
@@ -149,7 +149,7 @@ install_docker(){
     sudo apt update && \
     sudo apt install apt-transport-https ca-certificates curl software-properties-common -y
 
-    curl -fsSL https://download.docker.com/linux/ubuntu/gpg | apt-key add -
+    curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
 
     sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu bionic stable" && \
     sudo apt update && \
@@ -160,9 +160,9 @@ install_docker(){
 
     #run docker without sudo
 
-
     echo "Configuring docker to run without sudo"
     sudo usermod -aG docker ${USER}
+    newgrp docker
 
     code --install-extension ms-azuretools.vscode-docker
 }
@@ -180,7 +180,7 @@ install_minikube(){
     && chmod +x /tmp/minikube
     sudo mkdir -p /usr/local/bin/ && \
     sudo install /tmp/minikube /usr/local/bin/ 
-    minikube start
+    minikube start --vm-driver=docker
     minikube status
     code --install-extension ms-kubernetes-tools.vscode-kubernetes-tools
 }
@@ -190,15 +190,12 @@ install_minikube(){
 install_vscode(){
     echo "Installing VSCode"
 
-    curl https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > packages.microsoft.gpg && \
-    install -o root -g root -m 644 packages.microsoft.gpg /usr/share/keyrings/ && \
-    sh -c 'echo "deb [arch=amd64 signed-by=/usr/share/keyrings/packages.microsoft.gpg] https://packages.microsoft.com/repos/vscode stable main" > /etc/sudo apt/sources.list.d/vscode.list'
+    wget -qO- https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > /tmp/packages.microsoft.gpg
+    sudo install -o root -g root -m 644 /tmp/packages.microsoft.gpg /etc/apt/trusted.gpg.d/
+    sudo sh -c 'echo "deb [arch=amd64 signed-by=/etc/apt/trusted.gpg.d/packages.microsoft.gpg] https://packages.microsoft.com/repos/vscode stable main" > /etc/apt/sources.list.d/vscode.list'
 
-    sudo apt install sudo apt-transport-https -y && \
     sudo apt update && \
     sudo apt install code -y # or code-insiders
-
-    rm packages.microsoft.gpg
 
     echo "export EDITOR=code" >> "$HOME/.env/aliases.sh"
 }
@@ -239,7 +236,7 @@ install_zsh(){
     rm -rf "$HOME/.zsh/zsh-history-substring-search" && \
     git clone https://github.com/zsh-users/zsh-history-substring-search.git "$HOME/.zsh/zsh-history-substring-search"
 
-    echo "source $HOME/.zsh-syntax-highlighting/zsh-syntax-highlighting.zsh" >> "$HOME/.zshrc"
+    echo "source $HOME/.zsh/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh" >> "$HOME/.zshrc"
     echo "source $HOME/.zsh/zsh-autosuggestions/zsh-autosuggestions.zsh" >> "$HOME/.zshrc"
     echo "source $HOME/.zsh/zsh-history-substring-search/zsh-history-substring-search.zsh" >> "$HOME/.zshrc"
     echo "source $HOME/.env/aliases.sh" >> "$HOME/.zshrc"
